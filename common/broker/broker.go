@@ -91,10 +91,10 @@ func (mb *MessageBroker[T]) Consume() (<-chan T, error) {
 
 func (r *MessageBroker[T]) Close() {
 	if err := r.channel.Close(); err != nil {
-		panic(err)
+		log.Printf("Error closing broker channel: %v", err)
 	}
 
 	if err := r.conn.Close(); err != nil {
-		panic(err)
+		log.Printf("Error closing broker connection: %v", err)
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/Rastler3D/container-monitoring/pinger/internal/config"
 	"github.com/Rastler3D/container-monitoring/pinger/internal/docker"
 	"log"
-	"sync"
 	"time"
 )
 
@@ -56,6 +55,7 @@ func (pinger *Pinger) StartWithContext(ctx context.Context) error {
 			log.Printf("Discovered containers: %v", containers)
 			pings := pinger.pingContainers(containers)
 
+			log.Printf("All containers pinged. Sending pings to message broker")
 			err = pinger.broker.Publish(pings)
 			if err != nil {
 				return err
@@ -70,30 +70,26 @@ func (pinger *Pinger) Close() {
 	pinger.docker.Close()
 }
 
-func (pinger *Pinger) pingContainers(containers []string) []model.ContainerStatus {
-	pingChannel := make(chan model.ContainerStatus, len(containers))
-	var wg sync.WaitGroup
+func (pinger *Pinger) pingContainers(containers []docker.Container) []model.ContainerStatus {
+	pingResults := make([]model.ContainerStatus, 0, len(containers))
 
-	for _, ip := range containers {
-		wg.Add(1)
-		go func() {
+	for _, container := range containers {
+	ips:
+		for _, ip := range container.Ips {
 			log.Printf("Start pinging containers : %s", ip)
-			defer wg.Done()
-			ping, err := pinger.docker.PingContainer(ip)
+
+			ping, err := pinger.docker.PingContainer(container.Pid, ip)
 			if err != nil {
 				log.Printf("Failed to ping container %s: %s", ip, err)
-				return
+				continue
 			}
 			log.Printf("Container %s pinged successfully. Ping time:  %f", ping.IP, ping.PingTime)
-			pingChannel <- ping
-		}()
-	}
-	wg.Wait()
-	close(pingChannel)
 
-	pingResults := make([]model.ContainerStatus, 0, len(containers))
-	for result := range pingChannel {
-		pingResults = append(pingResults, result)
+			pingResults = append(pingResults, ping)
+
+			break ips
+
+		}
 	}
 
 	return pingResults

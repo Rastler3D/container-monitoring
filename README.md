@@ -20,7 +20,7 @@ This project is a container monitoring system that pings Docker containers and d
 
 1. Clone the repository:
    ```
-   git clone https://github.com/Rastler3d/container-monitoring.git
+   git clone https://github.com/Rastler3D/container-monitoring.git
    cd container-monitoring
    ```
 
@@ -47,8 +47,8 @@ Content-Type: application/json
 
 [
     {
-        "ip": "My Note",
-        "ping_time": "1.32",
+        "ip": "172.19.0.3",
+        "ping_time": "0.32",
         "last_ping": "2025-02-09T19:53:05.467033Z"
     }
 ]

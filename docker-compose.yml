@@ -22,6 +22,8 @@ services:
         condition: service_healthy
       broker:
         condition: service_healthy
+    networks:
+      - network
 
   frontend:
     build: ./frontend
@@ -30,6 +32,8 @@ services:
     depends_on:
       - backend
     restart: always
+    networks:
+      - network
 
   pinger:
     build:
@@ -42,13 +46,17 @@ services:
     cap_add:
       - NET_ADMIN
     user: root
-
+    privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/netns:/var/run/netns
+      - /proc:/proc
     restart: always
     depends_on:
       broker:
         condition: service_healthy
+    networks:
+      - broker_network
 
   db:
     image: postgres:13
@@ -64,6 +72,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - network
 
   broker:
     image: rabbitmq:3-management
@@ -79,6 +89,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - network
+      - broker_network
 
 volumes:
   pgdata:
+
+networks:
+  network:
+  broker_network:
