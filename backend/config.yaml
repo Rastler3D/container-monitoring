@@ -1,0 +1,11 @@
+server:
+  port: 8080
+database:
+  host: db
+  port: 5432
+  user: postgres
+  password: password
+  name: containermonitor
+broker:
+  url: amqp://guest:guest@broker:5672/
+  queue: pings
